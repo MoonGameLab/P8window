@@ -1,5 +1,7 @@
 love = love
 graphics = love.graphics
+window = love.window
+print = print
 
 moduleConf = {
   debug: true
@@ -27,6 +29,22 @@ class P8Win extends Singleton
     height: graphics.getHeight! 
   }
 
+  --- class configuration
+  @conf = {
+    allowResize: false
+    globalScaling: true
+    pixelPerfectFullscreen: false
+    cursor: 0 --- 0 OS cursor
+    showSysCursor: true
+  }
+
+  --- Sets the default filter and line style globaly. (Pixel centred)
+  @setGlobalFilterlLineStyle: =>
+    if @@conf.globalScaling
+      @@pDebug "Setting DefaultFilter && LineStyle"
+      graphics.setDefaultFilter "nearest", "nearest", 1 -- https://love2d.org/wiki/love.graphics.setDefaultFilter
+      graphics.setLineStyle "rough" -- https://love2d.org/wiki/love.graphics.setLineStyle
+
   --- debug function
   @pDebug: (...) =>
     if moduleConf.debug
@@ -37,12 +55,39 @@ class P8Win extends Singleton
         print moduleConf.moduleName
         dump {...}
 
+  getMonitorSize: =>
+    w, h = window.getDesktopDimensions 1
+    @monitor = {
+      w: w,
+      h: h,
+    }
+  
+  getMaxScale: =>
+    fWidth = @monitor.w / @@winSize.width
+    fheight = @monitor.h / @@winSize.height
+    math = math
+    if fheight < fWidth
+      @maxScale = @monitor.h / @@winSize.height
+      @maxWinScale = math.floor (@monitor.h - 125) / @@winSize.height
+    else
+      @maxScale = @monitor.w / @@winSize.width
+      @maxWinScale = math.floor (@monitor.w - 125) / @@winSize.width
+
+    @@pDebug "scale", @maxScale, @maxWinScale
+
+    
   new: =>
     @@pDebug "Initializing."
+    
+    @monitor = {}
+    @maxScale = 0
+    @maxWinScale = 0
 
-
-
-
+    @@setGlobalFilterlLineStyle!
+    @mainCanvas = graphics.newCanvas @@winSize.width, @@winSize.height
+    @shaderCanvas = graphics.newCanvas @@winSize.width, @@winSize.height
+    @getMonitorSize!
+    @getMaxScale!
 
 
 
