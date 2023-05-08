@@ -75,19 +75,51 @@ class P8Win extends Singleton
 
     @@pDebug "scale", @maxScale, @maxWinScale
 
-    
-  new: =>
+  calcFullScreenOffset: (height = @@winSize.height, width = @@winSize.width) =>
+    math = math
+    fullScale = @maxScale
+
+    if @pixelPerfectFullscreen
+      fullScale = math.floor @maxScale
+
+    gameWidth = @@winSize.width * fullScale
+    blankWidth = width - gameWidth
+
+    gameHeight = @@winSize.height * fullScale
+    blankHeight = height - gameHeight
+
+    @offset.x = math.floor blankWidth/2 
+    @offset.y = math.floor blankHeight/2
+
+    if window.getFullscreen! == false
+      @offset = {x: 0, y: 0}
+
+
+  setGameScale: (scale) =>
+    @scale = scale
+    window.setMode @@winSize.width * @scale, @@winSize.height * @scale,  {fullscreen: false, resizable: @@conf.allowResize, highdpi: false}
+
+
+  new: (scale) =>
     @@pDebug "Initializing."
     
     @monitor = {}
     @maxScale = 0
+    @scale = 0
     @maxWinScale = 0
+    @offset = {
+      x: 0
+      y: 0
+    }
 
     @@setGlobalFilterlLineStyle!
     @mainCanvas = graphics.newCanvas @@winSize.width, @@winSize.height
     @shaderCanvas = graphics.newCanvas @@winSize.width, @@winSize.height
     @getMonitorSize!
     @getMaxScale!
+    @calcFullScreenOffset!
+    dScale = scale or @maxWinScale
+    @setGameScale dScale
 
 
 
