@@ -1,6 +1,7 @@
 love = love
 graphics = love.graphics
 window = love.window
+mouse = love.mouse
 print = print
 
 moduleConf = {
@@ -29,13 +30,18 @@ class P8Win extends Singleton
     height: graphics.getHeight! 
   }
 
+  --- TODO: better cursors loading
+  @cursorsPaths = {
+    {"P8window/assets/cursors/trig1.png", 0, 0}
+  }
+
   --- class configuration
   @conf = {
     allowResize: false
     globalScaling: true
     pixelPerfectFullscreen: false
     cursor: 0 --- 0 OS cursor
-    showSysCursor: true
+    showSysCursor: false -- to use the costom cursor
   }
 
   --- Sets the default filter and line style globaly. (Pixel centred)
@@ -100,9 +106,21 @@ class P8Win extends Singleton
     window.setMode @@winSize.width * @scale, @@winSize.height * @scale,  {fullscreen: false, resizable: @@conf.allowResize, highdpi: false}
 
 
+  setCursorVisibility: (bool) =>
+    mouse.setVisible bool
+
+
+  createCustomMouse: =>
+    for k, v in pairs @@cursorsPaths
+      @cursors[k] = graphics.newImage v[1]
+
+  updateCustomMouse: =>
+    @mouse.x = matrh.floor (mouse.getX! - @offset.x) / @scale
+    @mouse.y = matrh.floor (mouse.getY! - @offset.y) / @scale
+    
+
   new: (scale) =>
     @@pDebug "Initializing."
-    
     @monitor = {}
     @maxScale = 0
     @scale = 0
@@ -111,8 +129,14 @@ class P8Win extends Singleton
       x: 0
       y: 0
     }
+    @mouse = {
+      x: 0
+      y: 0
+    }
+    @cursors = {}
 
     @@setGlobalFilterlLineStyle!
+    @createCustomMouse!
     @mainCanvas = graphics.newCanvas @@winSize.width, @@winSize.height
     @shaderCanvas = graphics.newCanvas @@winSize.width, @@winSize.height
     @getMonitorSize!
@@ -120,6 +144,12 @@ class P8Win extends Singleton
     @calcFullScreenOffset!
     dScale = scale or @maxWinScale
     @setGameScale dScale
+    @setCursorVisibility @@conf.showSysCursor
+
+
+  update: (dt) =>
+    @updateCustomMouse!
+    @calcFullScreenOffset!
 
 
 
