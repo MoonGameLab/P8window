@@ -140,8 +140,9 @@ class P8Win extends Singleton
 
   --- updates the custom mouse
   updateCustomMouse: =>
-    @mouse.x = matrh.floor (mouse.getX! - @offset.x) / @scale
-    @mouse.y = matrh.floor (mouse.getY! - @offset.y) / @scale
+    math = math
+    @mouse.x = math.floor (mouse.getX! - @offset.x) / @scale
+    @mouse.y = math.floor (mouse.getY! - @offset.y) / @scale
     
   --- init the instance
   -- @tparam number scale
@@ -160,11 +161,13 @@ class P8Win extends Singleton
       y: 0
     }
     @cursors = {}
+    @currentCursor = 1
 
     @@setGlobalFilterlLineStyle!
     @createCustomMouse!
     @mainCanvas = graphics.newCanvas @@winSize.width, @@winSize.height
     @shaderCanvas = graphics.newCanvas @@winSize.width, @@winSize.height
+    @shaderPool = {}
     @getMonitorSize!
     @getMaxScale!
     @calcFullScreenOffset!
@@ -176,6 +179,27 @@ class P8Win extends Singleton
   update: (dt) =>
     @updateCustomMouse!
     @calcFullScreenOffset!
+
+  start: =>
+    graphics.setCanvas {@mainCanvas, stencil: true}
+    graphics.clear 0, 0, 0, 1
+    graphics.setColor 1, 1, 1, 1
+
+  stop: (hx = 0, hy = 0, hr = 0, hsx = 0, hsy = 0) =>
+    for shader=1, #@shaderPool
+      graphics.setCanvas {@shaderCanvas, stencil: true}
+      graphics.setShader @shaderPool[shader]
+      graphics.draw @mainCanvas
+      graphics.setShader!
+      graphics.setCanvas {@mainCanvas, stencil: true}
+      graphics.draw @shaderCanvas
+
+    -- TODO draw after shader
+    if @currentCursor > 0 and @currentCursor <= #@cursors
+      graphics.draw @cursors[@currentCursor], @mouse.x - @@cursorsPaths[@currentCursor][2], @mouse.y - @@cursorsPaths[@currentCursor][3]
+      
+    graphics.setCanvas!
+    graphics.draw @mainCanvas, hx + @offset.x, hy + @offset.y, hr, hsx + @scale, hsy + @scale
 
 
 
