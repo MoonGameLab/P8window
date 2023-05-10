@@ -43,7 +43,7 @@ class P8Win extends Singleton
   --- TODO: better cursors loading
   --- @local
   @cursorsPaths = {
-    {"P8window/assets/cursors/trig1.png", 0, 0}
+    {"assets/cursors/trig1.png", 0, 0}
   }
 
   --- module configuration
@@ -97,6 +97,8 @@ class P8Win extends Singleton
     else
       @maxScale = @monitor.w / @@winSize.width
       @maxWinScale = math.floor (@monitor.w - 125) / @@winSize.width
+
+    @@pDebug "scale", @maxScale, @maxWinScale
 
   --- calculates the fullscreen offset for the canvas in full screen mode
   -- @tparam number height
@@ -161,7 +163,6 @@ class P8Win extends Singleton
     @cursors = {}
     @currentCursor = 1
 
-    -- MB: put this code in a setUp methode so it does not run when instancing ?
     @@setGlobalFilterlLineStyle!
     @createCustomMouse!
     @mainCanvas = graphics.newCanvas @@winSize.width, @@winSize.height

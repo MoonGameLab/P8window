@@ -1,0 +1,5 @@
+#!/bin/bash
+
+moonc .
+love .
+find . -type f -name '*.lua' -not -path "./lib/log/*" -not -path "./conf.lua" -delete
