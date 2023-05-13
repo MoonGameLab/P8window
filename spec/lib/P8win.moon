@@ -176,15 +176,19 @@ class P8Win extends Singleton
     @setCursorVisibility @@conf.showSysCursor
 
 
+  --- Update the mouse & calculates fullscreen offset
+  -- @tparam number dt
   update: (dt) =>
     @updateCustomMouse!
     @calcFullScreenOffset!
 
+  --- sets the canvas so everything will be drawn in it
   start: =>
     graphics.setCanvas {@mainCanvas, stencil: true}
     graphics.clear 0, 0, 0, 1
     graphics.setColor 1, 1, 1, 1
 
+  --- return to default canvas & apply any stacked shaders as well as the cutom cursor
   stop: (hx = 0, hy = 0, hr = 0, hsx = 0, hsy = 0) =>
     for shader=1, #@shaderPool
       graphics.setCanvas {@shaderCanvas, stencil: true}
@@ -200,6 +204,24 @@ class P8Win extends Singleton
       
     graphics.setCanvas!
     graphics.draw @mainCanvas, hx + @offset.x, hy + @offset.y, hr, hsx + @scale, hsy + @scale
+
+  
+  setGameScale: (s) =>
+    @scale = s
+    window.setMode @@winSize.width * @scale, @@winSize.height * @scale,  {fullscreen: false, resizable: @@conf.allowResize, highdpi: false}
+
+  toggleFullscreen: =>
+    math = math
+
+    if window.getFullscreen! == false
+      fScale = @maxScale
+      if @@conf.pixelPerfectFullscreen
+        fScale = math.floor @maxScale
+      @setGameScale fScale
+      window.setFullscreen true, "desktop"
+    else
+      @setGameScale math.floor(@maxWinScale)
+      window.setFullscreen false
 
 
 
