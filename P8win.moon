@@ -15,6 +15,15 @@ moduleConf = {
 
 local dump
 
+
+Uid = ->
+  f = (x) ->
+    r = random(16) - 1
+    r = (x == "x") and (r + 1) or (r % 4) + 9
+    return ("0123456789abcdef")\sub r, r
+  return (("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")\gsub("[xy]", f))
+
+
 if moduleConf.debug then
   m = assert require("moon")
   dump = m.p
@@ -159,6 +168,8 @@ class P8Win extends Singleton
     else
       @currentCursor = 0
 
+    @afterShader = ->
+
     -- MB: put this code in a setUp methode so it does not run when instancing ?
     @@setGlobalFilterlLineStyle!
     if @cursorsPathsOffset then @createCustomMouse!
@@ -197,7 +208,7 @@ class P8Win extends Singleton
       graphics.setCanvas {@mainCanvas, stencil: true}
       graphics.draw @shaderCanvas
 
-    -- TODO draw after shader
+    @drawAfterShader!
     if @cursorsPathsOffset and @currentCursor > 0
       graphics.draw @cursors[@currentCursor], @mouse.x - @cursorsPathsOffset[@currentCursor][2], @mouse.y - @cursorsPathsOffset[@currentCursor][3]
       
@@ -250,5 +261,46 @@ class P8Win extends Singleton
       @currentCursor = cursorNumber
     else
       return
+
+  getCursorsCount: =>
+    #@cursors
+
+  --- SHADERS
+  
+  pushShader: (shader) =>
+    shaderId = Uid!
+    @shaderPool[#@shaderPool + 1] = {shaderId, shader}
+    shaderId
+
+  clearShaders: =>
+    @shaderPool = {}
+
+  popShader: =>
+    @shaderPool[#@shaderPool] = nil
+
+  countShaders: =>
+    #@shaderPool
+
+  setDrawAfterShader: (f) =>
+    if type(f) == "function"
+      @afterShader = f
+    else
+      return nil
+
+  clearDrawAfterShader: =>
+    @afterShader = ->
+
+  drawAfterShader: =>
+    @afterShader!
+  
+
+
+  
+
+
+  
+
+  
+
 
 P8Win
