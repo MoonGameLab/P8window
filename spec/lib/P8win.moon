@@ -40,12 +40,6 @@ class P8Win extends Singleton
     height: graphics.getHeight! 
   }
 
-  --- TODO: better cursors loading
-  --- @local
-  @cursorsPaths = {
-    {"assets/cursors/trig1.png", 0, 0}
-  }
-
   --- module configuration
   -- @table conf
   -- @field allowResize
@@ -98,8 +92,6 @@ class P8Win extends Singleton
       @maxScale = @monitor.w / @@winSize.width
       @maxWinScale = math.floor (@monitor.w - 125) / @@winSize.width
 
-    @@pDebug "scale", @maxScale, @maxWinScale
-
   --- calculates the fullscreen offset for the canvas in full screen mode
   -- @tparam number height
   -- @tparam number width
@@ -135,8 +127,8 @@ class P8Win extends Singleton
 
   --- creates images for the custom cursors
   createCustomMouse: =>
-    for k, v in pairs @@cursorsPaths
-      @cursors[k] = graphics.newImage v[1]
+    for cc, v in ipairs @cursorsPathsOffset
+      @cursors[cc] = graphics.newImage v[1]
 
   --- updates the custom mouse
   updateCustomMouse: =>
@@ -146,7 +138,7 @@ class P8Win extends Singleton
     
   --- init the instance
   -- @tparam number scale
-  new: (scale) =>
+  new: (scale, cursorsPathsOffset = nil) =>
     @@pDebug "Initializing."
     @monitor = {}
     @maxScale = 0
@@ -161,10 +153,14 @@ class P8Win extends Singleton
       y: 0
     }
     @cursors = {}
-    @currentCursor = 1
-
+    @cursorsPathsOffset = cursorsPathsOffset
+    if @cursorsPathsOffset
+      @currentCursor = 1
+    else
+      @currentCursor = 0
+    -- MB: put this code in a setUp methode so it does not run when instancing ?
     @@setGlobalFilterlLineStyle!
-    @createCustomMouse!
+    if @cursorsPathsOffset then @createCustomMouse!
     @mainCanvas = graphics.newCanvas @@winSize.width, @@winSize.height
     @shaderCanvas = graphics.newCanvas @@winSize.width, @@winSize.height
     @shaderPool = {}
@@ -173,22 +169,24 @@ class P8Win extends Singleton
     @calcFullScreenOffset!
     dScale = scale or @maxWinScale
     @setGameScale dScale
-    @setCursorVisibility @@conf.showSysCursor
+    if @currentCursor ~= 0
+      @setCursorVisibility @@conf.showSysCursor
+    else
+      @setCursorVisibility true --- sys cursor always visible if no cursors provided.
 
 
-  --- Update the mouse & calculates fullscreen offset
-  -- @tparam number dt
+  loadCursors: =>
+
+
   update: (dt) =>
     @updateCustomMouse!
     @calcFullScreenOffset!
 
-  --- sets the canvas so everything will be drawn in it
   start: =>
     graphics.setCanvas {@mainCanvas, stencil: true}
     graphics.clear 0, 0, 0, 1
     graphics.setColor 1, 1, 1, 1
 
-  --- return to default canvas & apply any stacked shaders as well as the cutom cursor
   stop: (hx = 0, hy = 0, hr = 0, hsx = 0, hsy = 0) =>
     for shader=1, #@shaderPool
       graphics.setCanvas {@shaderCanvas, stencil: true}
@@ -199,13 +197,13 @@ class P8Win extends Singleton
       graphics.draw @shaderCanvas
 
     -- TODO draw after shader
-    if @currentCursor > 0 and @currentCursor <= #@cursors
-      graphics.draw @cursors[@currentCursor], @mouse.x - @@cursorsPaths[@currentCursor][2], @mouse.y - @@cursorsPaths[@currentCursor][3]
+    if @cursorsPathsOffset and @currentCursor > 0
+      graphics.draw @cursors[@currentCursor], @mouse.x - @cursorsPathsOffset[@currentCursor][2], @mouse.y - @cursorsPathsOffset[@currentCursor][3]
       
     graphics.setCanvas!
     graphics.draw @mainCanvas, hx + @offset.x, hy + @offset.y, hr, hsx + @scale, hsy + @scale
 
-  
+
   setGameScale: (s) =>
     @scale = s
     window.setMode @@winSize.width * @scale, @@winSize.height * @scale,  {fullscreen: false, resizable: @@conf.allowResize, highdpi: false}
@@ -222,7 +220,32 @@ class P8Win extends Singleton
     else
       @setGameScale math.floor(@maxWinScale)
       window.setFullscreen false
+  
+  defineLoveResize: =>
+    if @@conf.allowResize
+      with love
+        .resize = (w, h) ->
+          if @scale ~= @maxScale
+            if @@winSize.width * @scale < w
+              if @scale + 1 < @maxScale
+                @scale += 1
+                @setGameScale @scale
+              else
+                @setGameScale @scale
+            elseif @@winSize.width * @scale > w
+              if @scale - 1 >= 1
+                @scale -= 1
+                @setGameScale @scale
+              else
+                @setGameScale @scale
+            else
+              @setGameScale @scale
+    
+  toggleCursor: =>
+    mouse.setVisible not mouse.isVisible!
+  
+  setCursor: (cursorName) =>
+    if @cursors[cursorName]
+      @currentCursor = cursorName
 
-
-
-P8Win!
+P8Win

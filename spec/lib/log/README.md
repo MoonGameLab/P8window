@@ -46,13 +46,6 @@ the `log.level` is ignored and no text is outputted or written. By default this
 value is set to `"trace"`, the lowest log level, such that no log messages are
 ignored.
 
-#### log.t
-Stringify a table
-
-```lua
-    log.info(log.t(table), "String", ...)
-``` 
-
 The level of each log mode, starting with the lowest log level is as follows:
 `"trace"` `"debug"` `"info"` `"warn"` `"error"` `"fatal"`
 
