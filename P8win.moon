@@ -202,7 +202,7 @@ class P8Win extends Singleton
   stop: (hx = 0, hy = 0, hr = 0, hsx = 0, hsy = 0) =>
     for shader=1, #@shaderPool
       graphics.setCanvas {@shaderCanvas, stencil: true}
-      graphics.setShader @shaderPool[shader]
+      graphics.setShader @shaderPool[shader][2]
       graphics.draw @mainCanvas
       graphics.setShader!
       graphics.setCanvas {@mainCanvas, stencil: true}
