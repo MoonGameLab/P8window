@@ -185,20 +185,20 @@ class P8Win extends Singleton
       @setCursorVisibility @@conf.showSysCursor
     else
       @setCursorVisibility true --- sys cursor always visible if no cursors provided.
-
-
-  loadCursors: =>
-
-
+  
+  --- updates the instance
+  -- @tparam number dt
   update: (dt) =>
     @updateCustomMouse!
     @calcFullScreenOffset!
 
+  --- sets the canvas that we will be drawing on
   start: =>
     graphics.setCanvas {@mainCanvas, stencil: true}
     graphics.clear 0, 0, 0, 1
     graphics.setColor 1, 1, 1, 1
 
+  --- return to the default canvas & apply shaders and cursor
   stop: (hx = 0, hy = 0, hr = 0, hsx = 0, hsy = 0) =>
     for shader=1, #@shaderPool
       graphics.setCanvas {@shaderCanvas, stencil: true}
@@ -215,11 +215,13 @@ class P8Win extends Singleton
     graphics.setCanvas!
     graphics.draw @mainCanvas, hx + @offset.x, hy + @offset.y, hr, hsx + @scale, hsy + @scale
 
-
+  --- sets the game scale
+  -- @tparam number s
   setGameScale: (s) =>
     @scale = s
     window.setMode @@winSize.width * @scale, @@winSize.height * @scale,  {fullscreen: false, resizable: @@conf.allowResize, highdpi: false}
 
+  --- toggles fullscreen
   toggleFullscreen: =>
     math = math
 
@@ -233,6 +235,7 @@ class P8Win extends Singleton
       @setGameScale math.floor(@maxWinScale)
       window.setFullscreen false
   
+  --- defines the resize function to follow the scale inc
   defineLoveResize: =>
     if @@conf.allowResize
       with love
@@ -253,43 +256,56 @@ class P8Win extends Singleton
             else
               @setGameScale @scale
     
+  --- toggles the cursor
   toggleCursor: =>
     mouse.setVisible not mouse.isVisible!
   
+  --- sets the cursor
+  -- @tparam number cursorNumber
   setCursor: (cursorNumber) =>
     if cursorNumber <= #@cursors and cursorNumber >=0
       @currentCursor = cursorNumber
     else
       return
 
+  --- gets cursors count
   getCursorsCount: =>
     #@cursors
 
   --- SHADERS
   
+  --- pushes love shader
+  -- @tparam shader shader
   pushShader: (shader) =>
     shaderId = Uid!
     @shaderPool[#@shaderPool + 1] = {shaderId, shader}
     shaderId
 
+  --- clear shaders pool
   clearShaders: =>
     @shaderPool = {}
 
+  --- pops the last shader
   popShader: =>
     @shaderPool[#@shaderPool] = nil
 
+  --- gets shaders count
   countShaders: =>
     #@shaderPool
 
+  --- sets after shader draw func
+  -- @tparam function f
   setDrawAfterShader: (f) =>
     if type(f) == "function"
       @afterShader = f
     else
       return nil
 
+  --- clear draw after shader func
   clearDrawAfterShader: =>
     @afterShader = ->
 
+  --- @local
   drawAfterShader: =>
     @afterShader!
   
